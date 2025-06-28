@@ -1,0 +1,128 @@
+/* Files Page Container */
+.files-page-container {
+    padding: 2rem;
+    background-color: #f9f9f9;
+  }
+  
+  .files-page-container h1 {
+    font-size: 2rem;
+    color: #000000;
+  }
+   
+  .hell  {
+    color: black;
+  }
+
+  .files-page-container p {
+    font-size: 1.1rem;
+    color: #170303;
+    margin: 2rem 0;
+  }
+  
+  /* File Upload Form */
+  .upload-form {
+    background-color: #f1f1f1;
+    padding: 1.5rem;
+    width: 100%;
+    max-width: 600px;
+    border-radius: 0.75rem;
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+    margin-bottom: 2rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+  
+  .upload-form label {
+    font-weight: bold;
+    color: #333;
+  }
+  
+  .upload-form input[type="file"],
+  .upload-form select,
+  .upload-form button {
+    padding: 0.8rem;
+    border-radius: 0.5rem;
+    border: 1px solid #ccc;
+    font-size: 1rem;
+    margin-top: 0.5rem;
+  }
+  
+  .upload-form button {
+    background-color: #28a745;
+    color: white;
+    cursor: pointer;
+  }
+  
+  .upload-form button:hover {
+    background-color: #218838;
+  }
+  
+  /* Uploaded Files Table */
+  .uploaded-files-table {
+    margin-top: 2rem;
+    width: 100%;
+  }
+  
+  .uploaded-files-table table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  
+  
+
+  .uploaded-files-table th, .uploaded-files-table td {
+    padding: 1rem;
+    text-align: left;
+    border-bottom: 1px solid #e30000;
+  }
+  
+  .uploaded-files-table th {
+    background-color: #217742;
+  }
+  
+  .uploaded-files-table td button {
+    margin-right: 1rem;
+    padding: 0.5rem 1rem;
+    border: none;
+    cursor: pointer;
+    background-color: #007bff;
+    color: rgb(255, 254, 254);
+    border-radius: 0.5rem;
+  }
+  
+  .uploaded-files-table td button:hover {
+    background-color: #0056b3;
+  }
+  
+  .uploaded-files-table td button:last-child {
+    background-color: #dc3545;
+  }
+  
+  .uploaded-files-table td button:last-child:hover {
+    background-color: #c82333;
+  }
+  
+  /* Sensitivity Level Highlighting */
+  .uploaded-files-table tr.critical {
+    background-color: #b63640;
+  }
+  
+  /* CSS for making the text color black */
+.hel {
+    color: black;
+  }
+  
+
+  .uploaded-files-table tr.high {
+    background-color: #efefec;
+  }
+  
+  .uploaded-files-table tr.medium {
+    background-color: #0091aa;
+  }
+  
+  .uploaded-files-table tr.low {
+    background-color: #d4edda;
+  }
+  

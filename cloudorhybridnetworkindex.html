@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zero Trust Status Dashboard</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+        .container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 600px;
+        }
+        h1 {
+            text-align: center;
+            font-size: 24px;
+            margin-bottom: 20px;
+        }
+        .input-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            font-size: 14px;
+            margin-bottom: 5px;
+        }
+        input[type="file"] {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        button {
+            width: 100%;
+            padding: 10px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-bottom: 10px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .dashboard {
+            margin-top: 20px;
+        }
+        .dashboard h2 {
+            font-size: 18px;
+            margin-bottom: 10px;
+        }
+        .status-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .status-icon {
+            font-size: 20px;
+            margin-right: 10px;
+        }
+        .status-icon.green {
+            color: green;
+        }
+        .status-icon.red {
+            color: red;
+        }
+        #details {
+            margin-top: 20px;
+            display: none;
+        }
+        #threatList {
+            list-style-type: disc;
+            padding-left: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Simulated Cloud & Hybrid Zones</h1>
+        <div class="input-group">
+            <label for="logFile">Upload Network Log File (.txt)</label>
+            <input type="file" id="logFile" accept=".txt">
+        </div>
+        <button id="useSimulatedLog">Use Simulated Log</button>
+        <button id="analyzeBtn">Analyze Logs</button>
+        <div class="dashboard">
+            <h2>Component Status</h2>
+            <div class="status-item">
+                <span id="cloudStorageIcon" class="status-icon">?</span>
+                <span>Cloud Storage</span>
+            </div>
+            <div class="status-item">
+                <span id="internalReportsIcon" class="status-icon">?</span>
+                <span>Internal Reports</span>
+            </div>
+        </div>
+        <div id="details">
+            <h2>Threat Details</h2>
+            <ul id="threatList"></ul>
+        </div>
+    </div>
+
+    <script>
+        // Predefined rules for zero trust threat detection
+        const BLACKLISTED_IPS = ['192.168.1.100', '10.0.0.50'];
+        const SUSPICIOUS_KEYWORDS = ['ERROR', 'UNAUTHORIZED', 'FAILED'];
+
+        // Simulated log content
+        const SIMULATED_LOG = `2025-05-26 20:50:00 ACCESS_ATTEMPT IP:172.16.0.1 USER:alice RESOURCE:CLOUD_STORAGE ACTION:READ MFA:TRUE
+2025-05-26 20:51:00 ACCESS_ATTEMPT IP:172.16.0.1 USER:alice RESOURCE:CLOUD_STORAGE ACTION:WRITE MFA:TRUE
+2025-05-26 20:52:00 ACCESS_ATTEMPT IP:192.168.1.100 USER:jdoe RESOURCE:INTERNAL_REPORTS ACTION:GENERATE MFA:FALSE
+2025-05-26 20:53:00 UNAUTHORIZED IP:192.168.1.100 USER:jdoe RESOURCE:INTERNAL_REPORTS ACTION:GENERATE
+2025-05-26 20:54:00 ERROR IP:10.0.0.50 USER:admin RESOURCE:INTERNAL_REPORTS ACTION:GENERATE
+2025-05-26 20:55:00 ACCESS_ATTEMPT IP:172.16.0.1 USER:alice RESOURCE:CLOUD_STORAGE ACTION:READ MFA:TRUE`;
+
+        document.getElementById('useSimulatedLog').addEventListener('click', () => {
+            const blob = new Blob([SIMULATED_LOG], { type: 'text/plain' });
+            const file = new File([blob], 'simulated-network.log', { type: 'text/plain' });
+            const fileInput = document.getElementById('logFile');
+            const dataTransfer = new DataTransfer();
+            dataTransfer.items.add(file);
+            fileInput.files = dataTransfer.files;
+        });
+
+        document.getElementById('analyzeBtn').addEventListener('click', () => {
+            const fileInput = document.getElementById('logFile');
+            const cloudStorageIcon = document.getElementById('cloudStorageIcon');
+            const internalReportsIcon = document.getElementById('internalReportsIcon');
+            const detailsDiv = document.getElementById('details');
+            const threatList = document.getElementById('threatList');
+
+            if (!fileInput.files.length) {
+                alert('Please upload a log file or click "Use Simulated Log".');
+                return;
+            }
+
+            const file = fileInput.files[0];
+            const reader = new FileReader();
+
+            reader.onload = function(event) {
+                const logContent = event.target.result;
+                if (!logContent.trim()) {
+                    alert('Uploaded file is empty.');
+                    return;
+                }
+
+                const lines = logContent.split('\n').filter(line => line.trim());
+                const threats = [];
+                let cloudStorageIssues = false;
+                let internalReportsIssues = false;
+
+                // Rule 1: Check for blacklisted IPs
+                lines.forEach((line, index) => {
+                    BLACKLISTED_IPS.forEach(ip => {
+                        if (line.includes(`IP:${ip}`)) {
+                            threats.push(`Suspicious IP detected: ${ip} at line ${index + 1}`);
+                            if (line.includes('RESOURCE:CLOUD_STORAGE')) cloudStorageIssues = true;
+                            if (line.includes('RESOURCE:INTERNAL_REPORTS')) internalReportsIssues = true;
+                        }
+                    });
+                });
+
+                // Rule 2: Check for missing MFA
+                lines.forEach((line, index) => {
+                    if (line.includes('MFA:FALSE')) {
+                        const ipMatch = line.match(/IP:(\S+)/);
+                        const userMatch = line.match(/USER:(\S+)/);
+                        if (ipMatch && userMatch) {
+                            threats.push(`Missing MFA for user ${userMatch[1]} from IP ${ipMatch[1]} at line ${index + 1}`);
+                            if (line.includes('RESOURCE:CLOUD_STORAGE')) cloudStorageIssues = true;
+                            if (line.includes('RESOURCE:INTERNAL_REPORTS')) internalReportsIssues = true;
+                        }
+                    }
+                });
+
+                // Rule 3: Check for suspicious keywords
+                lines.forEach((line, index) => {
+                    SUSPICIOUS_KEYWORDS.forEach(keyword => {
+                        if (line.includes(keyword)) {
+                            threats.push(`Suspicious keyword "${keyword}" detected at line ${index + 1}`);
+                            if (line.includes('RESOURCE:CLOUD_STORAGE')) cloudStorageIssues = true;
+                            if (line.includes('RESOURCE:INTERNAL_REPORTS')) internalReportsIssues = true;
+                        }
+                    });
+                });
+
+                // Update dashboard status
+                cloudStorageIcon.textContent = cloudStorageIssues ? '✗' : '✓';
+                cloudStorageIcon.className = 'status-icon ' + (cloudStorageIssues ? 'red' : 'green');
+                internalReportsIcon.textContent = internalReportsIssues ? '✗' : '✓';
+                internalReportsIcon.className = 'status-icon ' + (internalReportsIssues ? 'red' : 'green');
+
+                // Display threat details
+                threatList.innerHTML = '';
+                if (threats.length === 0) {
+                    threatList.innerHTML = '<li>No threats detected.</li>';
+                } else {
+                    threats.forEach(threat => {
+                        const li = document.createElement('li');
+                        li.textContent = threat;
+                        threatList.appendChild(li);
+                    });
+                }
+                detailsDiv.style.display = 'block';
+            };
+
+            reader.onerror = function() {
+                alert('Error reading the file.');
+            };
+
+            reader.readAsText(file);
+        });
+    </script>
+</body>
+</html>

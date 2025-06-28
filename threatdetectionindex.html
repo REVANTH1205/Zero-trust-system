@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple Threat Detection</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+        .container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 600px;
+        }
+        h1 {
+            text-align: center;
+            font-size: 24px;
+            margin-bottom: 20px;
+        }
+        .input-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            font-size: 14px;
+            margin-bottom: 5px;
+        }
+        input[type="file"] {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        button {
+            width: 100%;
+            padding: 10px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        #results {
+            margin-top: 20px;
+            display: none;
+        }
+        #results h2 {
+            font-size: 18px;
+            margin-bottom: 10px;
+        }
+        #threatList {
+            list-style-type: disc;
+            padding-left: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Network Threat Detection</h1>
+        <div class="input-group">
+            <label for="logFile">Upload Network Log File (.txt)</label>
+            <input type="file" id="logFile" accept=".txt">
+        </div>
+        <button id="analyzeBtn">Analyze Logs</button>
+        <div id="results">
+            <h2>Threat Analysis Results</h2>
+            <ul id="threatList"></ul>
+        </div>
+    </div>
+
+    <script>
+        // Predefined rules for threat detection
+        const BLACKLISTED_IPS = ['192.168.1.100', '10.0.0.50'];
+        const MAX_LOGIN_ATTEMPTS = 5;
+        const SUSPICIOUS_KEYWORDS = ['ERROR', 'UNAUTHORIZED', 'FAILED'];
+
+        document.getElementById('analyzeBtn').addEventListener('click', () => {
+            const fileInput = document.getElementById('logFile');
+            const resultsDiv = document.getElementById('results');
+            const threatList = document.getElementById('threatList');
+
+            if (!fileInput.files.length) {
+                alert('Please upload a log file.');
+                return;
+            }
+
+            const file = fileInput.files[0];
+            const reader = new FileReader();
+
+            reader.onload = function(event) {
+                const logContent = event.target.result;
+                if (!logContent.trim()) {
+                    alert('Uploaded file is empty.');
+                    return;
+                }
+
+                const lines = logContent.split('\n').filter(line => line.trim());
+                const threats = [];
+
+                // Rule 1: Check for blacklisted IPs
+                lines.forEach((line, index) => {
+                    BLACKLISTED_IPS.forEach(ip => {
+                        if (line.includes(ip)) {
+                            threats.push(`Suspicious IP detected: ${ip} at line ${index + 1}`);
+                        }
+                    });
+                });
+
+                // Rule 2: Check for excessive login attempts
+                const loginAttempts = {};
+                lines.forEach((line, index) => {
+                    if (line.includes('LOGIN_ATTEMPT')) {
+                        const ipMatch = line.match(/IP:(\S+)/);
+                        if (ipMatch) {
+                            const ip = ipMatch[1];
+                            loginAttempts[ip] = (loginAttempts[ip] || 0) + 1;
+                            if (loginAttempts[ip] > MAX_LOGIN_ATTEMPTS) {
+                                threats.push(`Excessive login attempts from IP ${ip} at line ${index + 1}`);
+                            }
+                        }
+                    }
+                });
+
+                // Rule 3: Check for suspicious keywords
+                lines.forEach((line, index) => {
+                    SUSPICIOUS_KEYWORDS.forEach(keyword => {
+                        if (line.includes(keyword)) {
+                            threats.push(`Suspicious keyword "${keyword}" detected at line ${index + 1}`);
+                        }
+                    });
+                });
+
+                // Display results
+                threatList.innerHTML = '';
+                if (threats.length === 0) {
+                    threatList.innerHTML = '<li>No threats detected.</li>';
+                } else {
+                    threats.forEach(threat => {
+                        const li = document.createElement('li');
+                        li.textContent = threat;
+                        threatList.appendChild(li);
+                    });
+                }
+                resultsDiv.style.display = 'block';
+            };
+
+            reader.onerror = function() {
+                alert('Error reading the file.');
+            };
+
+            reader.readAsText(file);
+        });
+    </script>
+</body>
+</html>
